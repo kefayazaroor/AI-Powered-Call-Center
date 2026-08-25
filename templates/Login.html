@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="{{ g.lang }}" dir="{{ 'rtl' if g.lang == 'ar' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tr('login_title', 'تسجيل الدخول - نظام الكول سنتر') }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- خط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* خلفية الفيديو */
+        .video-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            filter: brightness(60%);
+        }
+
+        /* طبقة شفافة */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 32, 96, 0.6), rgba(0, 0, 0, 0.4));
+            z-index: -1;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 18px;
+            padding: 30px 25px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+            animation: fadeInUp 0.9s ease;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #003399;
+        }
+
+        .logo span {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .role-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 999px;
+            background: #e6f0ff;
+            color: #003399;
+            margin-top: 5px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: 1px solid #d0d0d0;
+            font-size: 13px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #003399;
+            box-shadow: 0 0 0 2px rgba(0,51,153,0.15);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #0052cc, #003399);
+            color: #fff;
+            margin-top: 5px;
+            transition: transform 0.1s ease, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            transform: translateY(-1px);
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #777;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .error {
+            color: #b30000;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(25px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <!-- زر تغيير اللغة -->
+    <div style="position: absolute; top: 20px; left: 20px; z-index: 999;">
+        <a href="/set-lang/ar" style="color:white; font-weight:bold; margin-left:10px;">🇸🇦 عربي</a>
+        <a href="/set-lang/en" style="color:white; font-weight:bold;">🇬🇧 English</a>
+    </div>
+
+    <!-- فيديو الخلفية -->
+    <video class="video-bg" autoplay muted loop>
+        <source src="{{ url_for('static', filename='callcenter-bg.mp4') }}" type="video/mp4">
+    </video>
+
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="login-card">
+
+            <div class="logo">
+                <h1>{{ tr('login_header', 'AI Call Center') }}</h1>
+                <span>{{ tr('login_subtitle', 'نظام ذكاء اصطناعي لتحليل مكالمات الكول سنتر') }}</span><br>
+                <span class="role-tag">{{ tr('login_role_tag', 'دخول الموظفين والمدير') }}</span>
+            </div>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label>{{ tr('username_label', 'البريد الإلكتروني / اسم المستخدم:') }}</label>
+                    <input type="text" name="username" placeholder="مثال: admin@company.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ tr('password_label', 'كلمة المرور:') }}</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ tr('role_label', 'نوع الدخول:') }}</label>
+                    <select name="role">
+                        <option value="agent">{{ tr('role_agent', 'موظف كول سنتر') }}</option>
+                        <option value="admin">{{ tr('role_admin', 'مدير النظام') }}</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn">{{ tr('login_btn', 'تسجيل الدخول') }}</button>
+
+                <p class="hint">
+                    {{ tr('demo_data', 'بيانات تجريبية') }}:<br>
+                    {{ tr('demo_admin', 'مدير: admin / 1234') }}<br>
+                    {{ tr('demo_agent', 'موظف: agent / 1234') }}
+                </p>
+            </form>
+
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="{{ 'ar' if g.lang=='ar' else 'en' }}"
+      dir="{{ 'rtl' if g.lang=='ar' else 'ltr' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tr('call_details_title', 'تفاصيل المكالمة') }}</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma;
+            background: #f3f5fb;
+        }
+
+        .topbar {
+            background: #0b5ed7;
+            color: #fff;
+            padding: 14px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lang-switch {
+            background: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #0b5ed7 !important;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 25px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #0b5ed7;
+            margin-top: 0;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .meta-item {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .meta-label {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: #111;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .section-title {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .box {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+
+        .actions {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .actions a {
+            text-decoration: none;
+            color: #0b5ed7;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- الشريط العلوي -->
+<div class="topbar">
+    <div>{{ tr('call_details_title','📞 تفاصيل المكالمة') }}</div>
+
+    <div>
+        <a href="/set-lang/ar" class="lang-switch">عربي</a>
+        <a href="/set-lang/en" class="lang-switch">English</a>
+        <span>{{ username }}</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <h2>
+        {{ tr('call_number','مكالمة رقم') }}: {{ call.call_id }}
+    </h2>
+
+    <div class="meta-grid">
+
+        <div class="meta-item">
+            <div class="meta-label">{{ tr('employee_name','اسم الموظف') }}</div>
+            <div class="meta-value">{{ call.employee_name }}</div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-label">{{ tr('customer_phone','رقم العميل') }}</div>
+            <div class="meta-value">{{ call.phone }}</div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-label">{{ tr('case_type','نوع الحالة') }}</div>
+            <div class="meta-value">{{ call.case_type }}</div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-label">{{ tr('date_time','التاريخ والوقت') }}</div>
+            <div class="meta-value">{{ call.date }} - {{ call.time }}</div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-label">{{ tr('sentiment','مشاعر العميل') }}</div>
+            <div class="meta-value">{{ call.sentiment }}</div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-label">{{ tr('urgency','درجة الأهمية') }}</div>
+            <div class="meta-value">{{ call.urgency }}</div>
+        </div>
+
+    </div>
+
+    <!-- الصوت -->
+    <div class="section-title">{{ tr('play_audio','تشغيل المكالمة الصوتية') }}</div>
+
+    {% if call.audio_path %}
+        <audio controls style="width:100%; margin-bottom:20px;">
+            <source src="/{{ call.audio_path }}" type="audio/wav">
+        </audio>
+    {% else %}
+        <p style="color:#b91c1c;">{{ tr('no_audio','لا يوجد تسجيل صوتي لهذه المكالمة') }}</p>
+    {% endif %}
+
+    <!-- الملخص -->
+    <div class="section-title">{{ tr('summary','ملخص المكالمة') }}</div>
+    <div class="box">{{ call.summary }}</div>
+
+    <!-- النص الكامل -->
+    <div class="section-title">{{ tr('full_text','النص الكامل للمكالمة') }}</div>
+    <div class="box">{{ call.transcript }}</div>
+
+    <div class="actions">
+        <a href="/call/{{ call.id }}/pdf">📄 {{ tr('download_pdf','تحميل PDF') }}</a>
+        <a href="/call/{{ call.id }}/word">📝 {{ tr('download_word','تحميل Word') }}</a>
+        <a href="/dashboard">⬅ {{ tr('back_dashboard','رجوع للوحة المدير') }}</a>
+    </div>
+
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>نظام الكول سنتر - الموظفين</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- ===== الهيدر ===== -->
+<div class="topbar">
+    <div>📞 نظام الكول سنتر الذكي</div>
+
+    <div>
+        مرحباً {{ username }}
+        — <a href="/logout" class="topbar-link">تسجيل خروج</a>
+    </div>
+</div>
+
+<!-- ===== تخطيط الصفحة ===== -->
+<div class="layout">
+
+    <!-- ===== 1) تسجيل مكالمة جديدة (يمين) ===== -->
+    <div class="card input-card">
+        <h2>تسجيل مكالمة جديدة</h2>
+
+        <label>اسم الموظف:</label>
+        <input type="text" id="employee_name" value="{{ username }}">
+
+        <label>رقم هاتف العميل:</label>
+        <input type="text" id="phone" placeholder="079xxxxxxx">
+
+        <label>نوع الحالة:</label>
+        <select id="case_type">
+            <option value="استفسار">استفسار</option>
+            <option value="شكوى">شكوى</option>
+            <option value="متابعة">متابعة</option>
+            <option value="غير محدد">غير محدد</option>
+        </select>
+
+        <label>ملف المكالمة الصوتية:</label>
+        <input type="file" id="audio">
+
+        <button class="primary-btn" onclick="sendAudio()">
+            تحويل وتحليل المكالمة
+        </button>
+    </div>
+
+    <!-- ===== 2) معلومات المكالمة (يسار) ===== -->
+    <div class="card info-card">
+        <h2>معلومات المكالمة</h2>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <span class="info-label">اسم الموظف:</span>
+                <span class="info-value" id="emp_show">{{ username }}</span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">رقم العميل:</span>
+                <span class="info-value" id="phone_show">—</span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">نوع الحالة:</span>
+                <span class="info-value" id="case_show">—</span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">حالة العميل:</span>
+                <span class="info-value" id="sentiment_show">—</span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">درجة الأهمية:</span>
+                <span class="info-value" id="urgency_show">—</span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">معرّف المكالمة:</span>
+                <span class="info-value" id="call_id_show">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 3) ملخص وتحليل ذكي (تحت بعرض الصفحة) ===== -->
+    <div class="card summary-card">
+        <h2 class="section-title">ملخص وتحليل ذكي</h2>
+
+        <h3 class="sub-title">ملخص المكالمة:</h3>
+        <div class="long-box" id="summary"></div>
+
+        <h3 class="sub-title">النص الكامل للمكالمة:</h3>
+        <div class="long-box" id="transcript"></div>
+    </div>
+
+</div>
+
+<!-- ===== الفوتر ===== -->
+<div class="footer">
+    جميع الحقوق محفوظة — نظام كول سنتر ذكي
+</div>
+
+<script>
+function sendAudio() {
+    let employee_name = document.getElementById("employee_name").value;
+    let phone = document.getElementById("phone").value;
+    let case_type = document.getElementById("case_type").value;
+    let audio = document.getElementById("audio").files[0];
+
+    if (!audio) {
+        alert("⚠ الرجاء اختيار ملف صوتي!");
+        return;
+    }
+
+    let form = new FormData();
+    form.append("employee_name", employee_name);
+    form.append("phone", phone);
+    form.append("case_type", case_type);
+    form.append("audio", audio);
+
+    fetch("/api/transcribe", {
+        method: "POST",
+        body: form
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("summary").innerText = data.summary || "";
+        document.getElementById("transcript").innerText = data.transcript || "";
+
+        document.getElementById("sentiment_show").innerText = data.sentiment || "—";
+        document.getElementById("urgency_show").innerText = data.urgency || "—";
+        document.getElementById("emp_show").innerText = data.employee_name || "{{ username }}";
+        document.getElementById("phone_show").innerText = data.phone || "—";
+        document.getElementById("case_show").innerText = data.case_type || "—";
+        document.getElementById("call_id_show").innerText = data.call_id || "—";
+    })
+    .catch(err => {
+        alert("حدث خطأ أثناء تحليل المكالمة");
+    });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="{{ 'ar' if g.lang=='ar' else 'en' }}" dir="{{ 'rtl' if g.lang=='ar' else 'ltr' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tr('dashboard_title', 'لوحة التحكم - المدير') }}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #f3f5fb;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+
+        /* الشريط العلوي */
+        .topbar {
+            background: #0b5ed7;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 17px;
+        }
+
+        .topbar a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        /* زر اللغة */
+        .lang-switch {
+            background: white;
+            color: #0b5ed7 !important;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .title-main {
+            color: #0b5ed7;
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 25px;
+        }
+
+        /* صندوق إحصائية */
+        .stat-box {
+            background: #fff;
+            padding: 22px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+            transition: 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-label {
+            color: #555;
+            font-size: 15px;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            color: #0b5ed7;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* زر جميع المكالمات */
+        .btn-all {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #0b5ed7;
+            color: white !important;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-all:hover {
+            background: #0847a0;
+        }
+
+        /* منضدة المكالمات */
+        table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        table thead {
+            background: #e8efff;
+        }
+
+        .action-links a {
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- شريط علوي -->
+    <div class="topbar">
+        <div>⚡ {{ tr('dashboard_title', 'لوحة تحكم المدير') }}</div>
+
+        <div>
+            <a href="/set-lang/ar" class="lang-switch">عربي</a>
+            <a href="/set-lang/en" class="lang-switch">English</a>
+
+            {{ tr('hello','مرحباً') }} {{ username }}
+
+            <a href="/admin/users" style="color:white; margin-left:15px;">{{ tr('employees','الموظفون') }} 👥</a>
+            <a href="/logout">{{ tr('logout','تسجيل خروج') }}</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- الموظفين -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="title-main">👥 {{ tr('employees','الموظفون') }}</div>
+            <a href="/admin/users" class="btn-all" style="background:#198754;">
+                {{ tr('manage_employees','إدارة الموظفين') }}
+            </a>
+        </div>
+
+        <!-- صندوق الموظفين -->
+        <div class="row mt-3">
+            <div class="col-md-3 mb-3">
+                <div class="stat-box" style="border-left: 5px solid #198754;">
+                    <div class="stat-label">{{ tr('employees_count_label','عدد الموظفين') }}</div>
+                    <div class="stat-number">{{ employees_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الإحصائيات -->
+        <div class="title-main">📊 {{ tr('stats','الإحصائيات العامة') }}</div>
+
+        <div class="row mt-4">
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('total_calls','إجمالي المكالمات') }}</div>
+                    <div class="stat-number">{{ total_calls }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('today_calls','مكالمات اليوم') }}</div>
+                    <div class="stat-number">{{ todays_calls }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('inquiries','الاستفسارات') }}</div>
+                    <div class="stat-number">{{ inquiries }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('complaints','الشكاوي') }}</div>
+                    <div class="stat-number">{{ complaints }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('followups','المتابعات') }}</div>
+                    <div class="stat-number">{{ followups }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('positive','إيجابي') }}</div>
+                    <div class="stat-number">{{ positive }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('negative','سلبي') }}</div>
+                    <div class="stat-number">{{ negative }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-box">
+                    <div class="stat-label">{{ tr('neutral','محايد') }}</div>
+                    <div class="stat-number">{{ neutral }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- الرسم البياني -->
+        <div class="title-main mt-4">📈 {{ tr('chart_title','إحصائيات حسب التاريخ') }}</div>
+
+        <canvas id="callsChart" class="mt-3 mb-4"
+            data-labels='{{ dates | tojson }}'
+            data-counts='{{ counts | tojson }}'
+            height="110"></canvas>
+
+        <script>
+            const canvas = document.getElementById("callsChart");
+            const labels = JSON.parse(canvas.dataset.labels || "[]");
+            const counts = JSON.parse(canvas.dataset.counts || "[]");
+
+            new Chart(canvas.getContext("2d"), {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "{{ tr('calls_count','عدد المكالمات') }}",
+                        data: counts,
+                        borderColor: "#0b5ed7",
+                        backgroundColor: "rgba(11,94,215,0.2)",
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true }
+            });
+        </script>
+
+        <!-- آخر 20 مكالمة -->
+        <div class="title-main mt-5">📞 {{ tr('last_calls','آخر 20 مكالمة') }}</div>
+
+        <a href="/all-calls" class="btn-all">
+            {{ tr('all_calls','عرض جميع المكالمات') }}
+        </a>
+
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered text-center">
+                <thead>
+                    <tr>
+                        <th>{{ tr('employee','الموظف') }}</th>
+                        <th>{{ tr('customer_phone','رقم العميل') }}</th>
+                        <th>{{ tr('case_type','نوع الحالة') }}</th>
+                        <th>{{ tr('date','التاريخ') }}</th>
+                        <th>{{ tr('time','الوقت') }}</th>
+                        <th>{{ tr('actions','الإجراء') }}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for call in recent_calls %}
+                    <tr>
+                        <td>{{ call.employee_name }}</td>
+                        <td>{{ call.phone }}</td>
+                        <td>{{ call.case_type }}</td>
+                        <td>{{ call.date }}</td>
+                        <td>{{ call.time }}</td>
+
+                        <td class="action-links">
+                            <a href="/call/{{ call.id }}">👁 {{ tr('view','عرض') }}</a>
+                            <a href="/call/{{ call.id }}/pdf">📄 PDF</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+

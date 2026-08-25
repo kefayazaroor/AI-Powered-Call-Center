@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="{{ 'ar' if g.lang=='ar' else 'en' }}" 
+      dir="{{ 'rtl' if g.lang=='ar' else 'ltr' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tr('all_calls_title', 'جميع المكالمات') }}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background: #f3f5fb;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+
+        /* أعلى الصفحة */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            align-items: center;
+        }
+
+        .top-bar a.return-btn {
+            text-decoration: none;
+            background: #b30000;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .top-bar a.return-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* زر اللغة */
+        .lang-switch {
+            background: #0b5ed7;
+            color: white !important;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .title {
+            color: #0b5ed7;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .filter-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        table thead {
+            background: #e9efff;
+        }
+
+        .btn-excel {
+            background: #0faa3f;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-excel:hover {
+            background: #0a8d34;
+        }
+
+        .action-links a {
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 7px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- أعلى الصفحة -->
+<div class="top-bar">
+
+    <div class="title">
+        📞 {{ tr('all_calls_title','جميع المكالمات') }}
+    </div>
+
+    <div>
+        <a href="/set-lang/ar" class="lang-switch">عربي</a>
+        <a href="/set-lang/en" class="lang-switch">English</a>
+
+        <a href="/dashboard" class="return-btn">
+            ← {{ tr('back_to_dashboard','رجوع للوحة التحكم') }}
+        </a>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- زر تصدير -->
+    <div class="mb-3">
+        <a href="/export/excel" class="btn btn-excel">
+            📤 {{ tr('export_excel','تصدير كل المكالمات Excel') }}
+        </a>
+    </div>
+
+    <!-- صندوق الفلاتر -->
+    <div class="filter-box">
+
+        <form method="get" class="row g-3">
+
+            <div class="col-md-3">
+                <label class="form-label">{{ tr('from_date','من تاريخ') }}</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">{{ tr('to_date','إلى تاريخ') }}</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">{{ tr('case_type','نوع الحالة') }}</label>
+                <select name="case_type" class="form-select">
+                    <option value="">{{ tr('all_cases','كل الحالات') }}</option>
+                    <option value="استفسار" {% if case_filter=='استفسار' %}selected{% endif %}>{{ tr('inquiry','استفسار') }}</option>
+                    <option value="شكوى" {% if case_filter=='شكوى' %}selected{% endif %}>{{ tr('complaint','شكوى') }}</option>
+                    <option value="متابعة" {% if case_filter=='متابعة' %}selected{% endif %}>{{ tr('followup','متابعة') }}</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">{{ tr('search','بحث') }}</label>
+                <input type="text" name="search" value="{{ search }}"
+                       placeholder="{{ tr('search_placeholder','اسم موظف / رقم') }}"
+                       class="form-control">
+            </div>
+
+            <div class="col-12 mt-2">
+                <button class="btn btn-primary">{{ tr('search_btn','بحث') }} 🔍</button>
+                <a href="/all-calls" class="btn btn-secondary">{{ tr('reset','إعادة ضبط') }}</a>
+            </div>
+        </form>
+
+    </div>
+
+    <!-- جدول المكالمات -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center">
+            <thead>
+            <tr>
+                <th>{{ tr('employee','الموظف') }}</th>
+                <th>{{ tr('customer_phone','رقم العميل') }}</th>
+                <th>{{ tr('case_type','نوع الحالة') }}</th>
+                <th>{{ tr('date','التاريخ') }}</th>
+                <th>{{ tr('time','الوقت') }}</th>
+                <th>{{ tr('audio','الصوت') }}</th>
+                <th>{{ tr('actions','الإجراء') }}</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for call in calls %}
+            <tr>
+                <td>{{ call.employee_name }}</td>
+                <td>{{ call.phone }}</td>
+                <td>{{ call.case_type }}</td>
+                <td>{{ call.date }}</td>
+                <td>{{ call.time }}</td>
+
+                <!-- الصوت -->
+                <td>
+                    {% if call.audio_path %}
+                        <audio controls style="width:180px;">
+                            <source src="/{{ call.audio_path }}" type="audio/wav">
+                        </audio>
+                    {% else %}
+                        {{ tr('no_audio','لا يوجد ملف') }}
+                    {% endif %}
+                </td>
+
+                <td class="action-links">
+                    <a href="/call/{{ call.id }}">👁 {{ tr('view','عرض') }}</a>
+                    <a href="/call/{{ call.id }}/pdf">📄 PDF</a>
+                    <a href="/call/{{ call.id }}/word">📝 WORD</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
+

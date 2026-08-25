@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html 
+    lang="{{ 'ar' if g.lang=='ar' else 'en' }}"
+    dir="{{ 'rtl' if g.lang=='ar' else 'ltr' }}"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tr('admin_dashboard','لوحة تحكم المدير - نظام الكول سنتر') }}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* زر تغيير اللغة */
+        .lang-switcher {
+            position: absolute;
+            top: 15px;
+        }
+        .left-pos {
+            left: 20px;
+        }
+        .right-pos {
+            right: 20px;
+        }
+        .lang-switcher a {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #0b5ed7;
+            background: white;
+            color: #0b5ed7;
+            text-decoration: none;
+            margin-inline: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- زر تغيير اللغة -->
+<div class="lang-switcher {{ 'left-pos' if g.lang=='ar' else 'right-pos' }}">
+    <a href="/set-lang/ar">🇸🇦 عربي</a>
+    <a href="/set-lang/en">🇬🇧 English</a>
+</div>
+
+<header class="topbar">
+    <div class="logo">
+        <span class="logo-main">{{ tr('dashboard','لوحة تحكم المدير') }}</span>
+        <span class="logo-sub">{{ tr('dashboard_sub','إحصائيات وتحليل مكالمات الكول سنتر') }}</span>
+    </div>
+    <div class="top-info">
+        <span>{{ tr('welcome','مرحباً') }}، {{ username }}</span> |
+        <a href="{{ url_for('index') }}" class="top-link">{{ tr('employee_interface','واجهة الموظف') }}</a> |
+        <a href="{{ url_for('logout') }}" class="top-link">{{ tr('logout','تسجيل الخروج') }}</a>
+    </div>
+</header>
+
+<main class="layout-dashboard">
+
+    <!-- إحصائيات عامة -->
+    <section class="card stats-card">
+        <h2>{{ tr('general_stats','إحصائيات عامة') }}</h2>
+
+        <div class="stats-grid">
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('total_calls','إجمالي المكالمات') }}</span>
+                <span class="stat-value">{{ total_calls }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('todays_calls','مكالمات اليوم') }}</span>
+                <span class="stat-value">{{ todays_calls }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('complaints','شكاوي') }}</span>
+                <span class="stat-value">{{ complaints }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('inquiries','استفسارات') }}</span>
+                <span class="stat-value">{{ inquiries }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('followups','متابعات') }}</span>
+                <span class="stat-value">{{ followups }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('urgent_calls','مكالمات عاجلة') }}</span>
+                <span class="stat-value">{{ urgent }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('normal_calls','مكالمات عادية') }}</span>
+                <span class="stat-value">{{ normal }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">{{ tr('sentiments','إيجابي / سلبي / محايد') }}</span>
+                <span class="stat-value">{{ positive }} / {{ negative }} / {{ neutral }}</span>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- مخطط الأيام -->
+    <section class="card chart-card">
+        <h2>{{ tr('calls_per_day','عدد المكالمات حسب اليوم') }}</h2>
+
+        <canvas id="callsChart" height="120"
+            data-labels='{{ dates | tojson }}'
+            data-counts='{{ counts | tojson }}'>
+        </canvas>
+    </section>
+
+    <!-- آخر المكالمات -->
+    <section class="card table-card">
+        <h2>{{ tr('latest_calls','آخر المكالمات') }}</h2>
+
+        <div class="table-wrapper">
+            <table class="calls-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{{ tr('date','التاريخ') }}</th>
+                        <th>{{ tr('time','الوقت') }}</th>
+                        <th>{{ tr('employee','الموظف') }}</th>
+                        <th>{{ tr('client','العميل') }}</th>
+                        <th>{{ tr('case_type','نوع الحالة') }}</th>
+                        <th>{{ tr('sentiment','الحالة') }}</th>
+                        <th>{{ tr('urgency','الأهمية') }}</th>
+                        <th>PDF</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for c in recent_calls %}
+                    <tr>
+                        <td>{{ c.call_id }}</td>
+                        <td>{{ c.date }}</td>
+                        <td>{{ c.time }}</td>
+                        <td>{{ c.employee_name }}</td>
+                        <td>{{ c.phone }}</td>
+                        <td>{{ c.case_type }}</td>
+                        <td>{{ c.sentiment }}</td>
+                        <td>{{ c.urgency }}</td>
+                        <td>
+                            <a href="{{ url_for('call_pdf', call_id=c.id) }}" target="_blank">
+                                {{ tr('download','تحميل') }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </section>
+</main>
+
+<script>
+    const chartCanvas = document.getElementById("callsChart");
+
+    const labels = JSON.parse(chartCanvas.dataset.labels || "[]");
+    const counts = JSON.parse(chartCanvas.dataset.counts || "[]");
+
+    new Chart(chartCanvas.getContext("2d"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "{{ tr('calls_count','عدد المكالمات') }}",
+                data: counts,
+                borderColor: "#0b5ed7",
+                backgroundColor: "rgba(11,94,215,0.1)",
+                tension: 0.25
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
+
+</body>
+</html>
